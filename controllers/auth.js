@@ -44,7 +44,7 @@ export const register = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hashed = bcrypt.hashSync(password, salt);
 
-    // INSERT (nota: columna con ñ entre corchetes)
+    // INSERT 
     await pool.request()
       .input("id_usuario", sql.Int, id_usuario)
       .input("nombre", sql.VarChar(45), nombre)

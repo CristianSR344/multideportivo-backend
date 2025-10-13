@@ -10,17 +10,32 @@ import cookieParser from "cookie-parser";
 
 //Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin:"*",
+}));
 app.use(cookieParser());
 
+const corsOptions = {
+    methods: "GET, POST",
+    allowedHeaders: ["Content-Type", "Authorization"]
+};
 
-app.use(express.json());
-app.use(cors());
+console.log("Starting....")
+
+//Set up a port 
+const PORT =process.env.PORT || 3000;
+
 app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", userRoutes);
 // app.use("/api/socios", sociosRoutes);
 // app.use("/api/roles", rolesRoutes);
 // app.use("/api/membresia", membresiaRoutes);
 
+app.get("/", (req,res)=>{
+    res.send("Backend server is running!")
+})
 
-app.listen(8800, ()=> console.log("Backend server is running!"));
+
+app.listen(PORT, ()=> {
+    console.log(`Backend server is running on http://localhost:${PORT}!`)
+});
