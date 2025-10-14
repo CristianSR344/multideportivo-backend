@@ -1,9 +1,8 @@
 import express from 'express';
-import {  } from '../controllers/membresia.js';
+import { getMembresias } from '../controllers/membresia.js';
 
 const router = express.Router();
 
-router.get("", );
- 
+router.get("/membresias", getMembresias);
 
 export default router;
