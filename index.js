@@ -33,7 +33,7 @@ app.use(
 );
 
 // Responder preflight
-app.options("*", cors());
+// app.options("*", cors());
 console.log("Starting....")
 
 //Set up a port 
