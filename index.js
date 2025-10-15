@@ -29,7 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", userRoutes);
 // app.use("/api/socios", sociosRoutes);
 app.use("/api/roles", rolesRoutes);
-app.use("/api/membresia", membresiaRoutes);
+app.use("/api/membresias", membresiaRoutes);
 
 app.get("/", (req, res) => {
     res.send("Backend server is running!")

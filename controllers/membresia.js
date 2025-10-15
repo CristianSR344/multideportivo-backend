@@ -47,7 +47,7 @@ export const membresia = async (req, res) => {
 export const getMembresias = async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query(`SELECT idMembresia, descripcion FROM dbo.membresias`);
+    const result = await pool.request().query(`SELECT idMembresia, descripcion FROM dbo.membresia`);
     res.json(result.recordset);
   } catch (err) {
     console.error("❌ Error al obtener membresías:", err);

@@ -1,8 +1,9 @@
 import express from 'express';
-import { getMembresias } from '../controllers/membresia.js';
+import { getMembresias, membresia } from '../controllers/membresia.js';
 
 const router = express.Router();
 
-router.get("/membresias", getMembresias);
+router.get("/getMembresias", getMembresias);
+router.post("/createMembresia", membresia);
 
 export default router;
