@@ -3,12 +3,12 @@ import sql from "mssql";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+
 /* ============================
    REGISTRO
 =============================== */
 export const register = async (req, res) => {
   const {
-    id_usuario,
     nombre,
     apellidoP,
     apellidoM,
@@ -18,63 +18,74 @@ export const register = async (req, res) => {
     colonia,
     calle,
     numero,
-    sexo,
+    sexo, // 1 o 0
     dob,
-    imagen,
-    rol
+    imagen, // base64 o null
+    rol // idRoles
   } = req.body;
 
   try {
     const pool = await poolPromise;
 
-    // ¿Existe por ID o correo?
-    const exists = await pool.request()
-      .input("id_usuario", sql.Int, id_usuario)
-      .input("correo", sql.VarChar(50), correo)
-      .query(`
-        SELECT 1 FROM dbo.usuarios
-        WHERE id_usuario = @id_usuario OR correo = @correo
-      `);
+    console.log("📥 Recibido registro de usuario:", { nombre, correo, rol });
 
-    if (exists.recordset.length) {
+    // 1️⃣ Validar correo duplicado
+    const exists = await pool.request()
+      .input("correo", sql.VarChar(50), correo)
+      .query(`SELECT 1 FROM dbo.usuarios WHERE correo = @correo`);
+
+    if (exists.recordset.length > 0) {
+      console.warn("⚠️ Usuario duplicado:", correo);
       return res.status(409).json({ message: "El usuario ya existe" });
     }
 
-    // Hash
+    // 2️⃣ Generar hash
     const salt = bcrypt.genSaltSync(10);
     const hashed = bcrypt.hashSync(password, salt);
 
-    // INSERT 
-    await pool.request()
-      .input("id_usuario", sql.Int, id_usuario)
+    // 3️⃣ Ejecutar INSERT y devolver id
+    console.log("🛠️ Insertando usuario...");
+
+    const result = await pool.request()
       .input("nombre", sql.VarChar(45), nombre)
       .input("apellidoP", sql.VarChar(50), apellidoP)
       .input("apellidoM", sql.VarChar(50), apellidoM)
       .input("correo", sql.VarChar(50), correo)
-      .input("password", sql.VarChar(200), hashed)       // parámetro ASCII
-      .input("cp", sql.Int, cp)
-      .input("colonia", sql.VarChar(100), colonia)
-      .input("calle", sql.VarChar(100), calle)
-      .input("numero", sql.Int, numero)
-      .input("sexo", sql.VarChar(10), sexo)
+      .input("password", sql.VarChar(200), hashed)
+      .input("cp", sql.Int, cp || null)
+      .input("colonia", sql.VarChar(100), colonia || null)
+      .input("calle", sql.VarChar(100), calle || null)
+      .input("numero", sql.Int, numero || null)
+      .input("sexo", sql.Int, typeof sexo === "number" ? sexo : null)
       .input("dob", sql.Date, dob ? new Date(dob) : null)
       .input("imagen", sql.VarBinary(sql.MAX), imagen ? Buffer.from(imagen, "base64") : null)
-      .input("rol", sql.Int, rol)
+      .input("rol", sql.Int, rol || null)
       .query(`
         INSERT INTO dbo.usuarios
-        (nombre, apellidoP, apellidoM, correo, contraseña, cp, colonia, calle, numero, sexo, dob, imagen, rol)
+        (nombre, apellidoP, apellidoM, correo, [contraseña], cp, colonia, calle, numero, sexo, dob, imagen, rol)
+        OUTPUT INSERTED.id_usuario
         VALUES
         (@nombre, @apellidoP, @apellidoM, @correo, @password, @cp, @colonia, @calle, @numero, @sexo, @dob, @imagen, @rol);
       `);
 
-    return res.status(201).json({ message: "Usuario creado correctamente" });
+    // Verificar resultado
+    if (!result.recordset || result.recordset.length === 0) {
+      throw new Error("El INSERT no devolvió ningún id_usuario");
+    }
+
+    const userId = result.recordset[0].id_usuario;
+    console.log("✅ Usuario insertado con id:", userId);
+
+    return res.status(201).json({
+      message: "Usuario creado correctamente",
+      userId
+    });
+
   } catch (err) {
     console.error("❌ Error en register:", err);
     return res.status(500).json({ error: err.message });
   }
 };
-
-
 
 
 /* ============================
@@ -132,9 +143,9 @@ export const login = async (req, res) => {
    LOGOUT
 =============================== */
 export const logout = (_req, res) => {
-    res.clearCookie("accessToken", {
+  res.clearCookie("accessToken", {
     secrue: true,
-    sameSite:"none"
-    }).status(200).json("Sesion Cerrada!")
+    sameSite: "none"
+  }).status(200).json("Sesion Cerrada!")
 };
 
