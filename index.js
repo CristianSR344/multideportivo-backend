@@ -2,7 +2,7 @@ import express from "express";
 const app = express();
 import cors from "cors";
 import userRoutes from "./routes/usuarios.js";
-// import sociosRoutes from "./routes/socios.js";
+import sociosRoutes from "./routes/socios.js";
 import rolesRoutes from "./routes/roles.js";
 import membresiaRoutes from "./routes/membresia.js";
 import authRoutes from "./routes/auth.js";
@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", userRoutes);
-// app.use("/api/socios", sociosRoutes);
+app.use("/api/socios", sociosRoutes);
 app.use("/api/roles", rolesRoutes);
 app.use("/api/membresias", membresiaRoutes);
 
