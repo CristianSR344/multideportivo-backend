@@ -6,7 +6,7 @@ import sql from "mssql";
 =============================== */
 export const crearSocio = async (req, res) => {
     const {
-        idSocio,
+
         idUsuario,
         idMembresia,
     } = req.body;
@@ -14,12 +14,12 @@ export const crearSocio = async (req, res) => {
     try {
         const pool = await poolPromise;
 
-        // ¿Existe por ID o correo?
+        // ¿Existe por ID?
         const exists = await pool.request()
-            .input("idSocio", sql.Int, idSocio)
+            .input("idUsuario", sql.Int, idUsuario)
             .query(`
         SELECT 1 FROM dbo.socios
-        WHERE idSocio = @idSocio
+        WHERE idUsuario = @idUsuario
       `);
 
         if (exists.recordset.length) {
@@ -29,14 +29,13 @@ export const crearSocio = async (req, res) => {
 
         // INSERT 
         await pool.request()
-            .input("idSocio", sql.Int, idSocio)
             .input("idUsuario", sql.Int, idUsuario)
             .input("idMembresia", sql.Int, idMembresia)
             .query(`
         INSERT INTO dbo.socios
-        (idSocio, idUsuario, idMembresia)
+        (idUsuario, idMembresia)
         VALUES
-        (@idSocio, @idUsuario, @idMembresia);
+        (@idUsuario, @idMembresia);
       `);
 
         return res.status(201).json({ message: "Usuario creado correctamente" });
