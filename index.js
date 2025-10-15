@@ -10,16 +10,30 @@ import cookieParser from "cookie-parser";
 
 //Middlewares
 app.use(express.json());
-app.use(cors({
-    origin: "*",
-}));
 app.use(cookieParser());
 
-const corsOptions = {
-    methods: "GET, POST",
-    allowedHeaders: ["Content-Type", "Authorization"]
-};
+const ALLOWED_ORIGINS = [
+    "http://localhost:3000", // desarrollo local
+    "https://black-smoke-059d69b1e.2.azurestaticapps.net", // tu Static Web App
+    // agrega otros orígenes válidos si los tienes (tu dominio custom si aplica)
+];
 
+app.use(
+    cors({
+        origin: function (origin, callback) {
+            // permitir herramientas tipo Postman/ThunderClient (origin = undefined)
+            if (!origin) return callback(null, true);
+            if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+            return callback(new Error("Not allowed by CORS"));
+        },
+        credentials: true, // si vas a usar cookies (JWT en login)
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
+
+// Responder preflight
+app.options("*", cors());
 console.log("Starting....")
 
 //Set up a port 
