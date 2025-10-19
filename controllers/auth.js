@@ -92,17 +92,17 @@ export const register = async (req, res) => {
    LOGIN por id_usuario (con JWT + cookie)
 =============================== */
 export const login = async (req, res) => {
-  const { id_usuario, password } = req.body;
+  const { correo, password } = req.body;
 
   try {
     const pool = await poolPromise;
 
     const r = await pool.request()
-      .input("id_usuario", sql.Int, id_usuario)
+      .input("correo", sql.VarChar(50), correo)
       .query(`
-        SELECT id_usuario, nombre, apellidoP, apellidoM, correo, [contraseña] AS hash, rol
+        SELECT nombre, apellidoP, apellidoM, correo, [contraseña] AS hash, rol
         FROM dbo.usuarios
-        WHERE id_usuario = @id_usuario;
+        WHERE correo = @correo;
       `);
 
     if (r.recordset.length === 0) {
