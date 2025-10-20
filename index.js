@@ -50,15 +50,12 @@ app.use(cookieParser());
    🚏 RUTAS
    ======================================================= */
 
-// 🔓 Rutas públicas (registro / login)
-app.use("/api/auth", authRoutes);
-
-// 🔐 Rutas protegidas (requieren estar autenticado)
-app.use("/api/usuarios", auth, userRoutes);
 
 // 🛡️ Rutas restringidas según rol (por ejemplo, 1 = Admin)
-app.use("/api/roles", auth, requireRole(1), rolesRoutes);
-app.use("/api/membresias", auth, requireRole(1), membresiaRoutes);
+app.use("/api/usuarios", auth, requireRole([1,2,3])); // admin entra aunque no esté en la lista
+app.use("/api/roles", auth, requireRole(1));          // solo admin
+app.use("/api/membresias", auth, requireRole([1,3])); // admin o recepcionista, p.ej.
+
 
 // Ejemplo de ruta semi-pública (puede responder diferente si hay token)
 app.get("/api/ping", optionalAuth, (req, res) => {
