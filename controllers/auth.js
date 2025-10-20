@@ -92,7 +92,7 @@ export const register = async (req, res) => {
    LOGIN por id_usuario (con JWT + cookie)
 =============================== */
 export const login = async (req, res) => {
-  const { correo, password } = req.body;
+  const { correo, password } = req.body;   // ⬅️ ahora correo
 
   try {
     const pool = await poolPromise;
@@ -100,7 +100,8 @@ export const login = async (req, res) => {
     const r = await pool.request()
       .input("correo", sql.VarChar(50), correo)
       .query(`
-        SELECT nombre, apellidoP, apellidoM, correo, [contraseña] AS hash, rol
+        SELECT id_usuario, nombre, apellidoP, apellidoM, correo,
+               [contraseña] AS hash, rol
         FROM dbo.usuarios
         WHERE correo = @correo;
       `);
@@ -110,7 +111,6 @@ export const login = async (req, res) => {
     }
 
     const user = r.recordset[0];
-
     const ok = bcrypt.compareSync(password, user.hash);
     if (!ok) {
       return res.status(401).json({ message: "Contraseña incorrecta" });
@@ -118,15 +118,15 @@ export const login = async (req, res) => {
 
     const token = jwt.sign(
       { sub: user.id_usuario, rol: user.rol },
-      "mi_secreto_super_seguro_123",     // para pruebas locales
+      "mi_secreto_super_seguro_123",
       { expiresIn: "1d" }
     );
 
     res.cookie("accessToken", token, {
       httpOnly: true,
-      secure: false,       // en local sin HTTPS
+      secure: false,
       sameSite: "Lax",
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     const { hash, ...safe } = user;
@@ -136,7 +136,6 @@ export const login = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-
 
 
 /* ============================
