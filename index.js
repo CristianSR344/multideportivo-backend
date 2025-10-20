@@ -38,7 +38,7 @@ const corsOptions = {
 // Aplicar CORS global
 app.use(cors(corsOptions));
 // Responder correctamente a preflights OPTIONS
-app.options("*", cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 /* =======================================================
    🧩 MIDDLEWARES BÁSICOS
@@ -72,7 +72,7 @@ app.get("/api/ping", optionalAuth, (req, res) => {
 /* =======================================================
    🚀 SERVIDOR
    ======================================================= */
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8800;
 
 app.get("/", (_req, res) => res.send("✅ Backend server is running!"));
 
