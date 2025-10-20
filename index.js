@@ -49,7 +49,7 @@ app.use(cookieParser());
 /* =======================================================
    🚏 RUTAS
    ======================================================= */
-
+app.use("/api/auth", authRoutes);
 
 // 🛡️ Rutas restringidas según rol (por ejemplo, 1 = Admin)
 app.use("/api/usuarios", auth, requireRole([1,2,3])); // admin entra aunque no esté en la lista
