@@ -12,7 +12,7 @@ import { auth, requireRole, optionalAuth } from "./middleware/auth.js";
 
 const app = express();
 
-const ALLOWED_ORIGINS = [
+const allowedOrigins = [
   "http://localhost:3000",
   "https://black-smoke-059d69b1e.2.azurestaticapps.net", // tu SWA
 ];
