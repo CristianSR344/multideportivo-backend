@@ -13,24 +13,34 @@ import { auth, requireRole, optionalAuth } from "./middleware/auth.js";
 const app = express();
 
 const ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://black-smoke-059d69b1e.2.azurestaticapps.net", // tu SWA
+  "http://localhost:3000",
+  "https://black-smoke-059d69b1e.2.azurestaticapps.net", // tu SWA
 ];
 
 app.use(express.json());
 app.use(cookieParser());
+
+app.use((req, res, next) => {
+  // Para ver qué Origin llega realmente
+  // console.log("Origin:", req.headers.origin);
+  next();
+});
+
 app.use(
-    cors({
-        origin(origin, cb) {
-            if (!origin) return cb(null, true);
-            if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-            cb(new Error("Not allowed by CORS"));
-        },
-        credentials: true,
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"],
-    })
+  cors({
+    origin: function (origin, callback) {
+      // Permite request sin Origin (e.g. curl, Postman) y los orígenes de la lista
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS: " + origin));
+    },
+    credentials: true, // ⬅️ si usas cookies/JWT en cookie
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
+
 app.options("*", cors());
 
 // Rutas públicas (por ejemplo, login / register si lo quieres público)
@@ -47,10 +57,10 @@ app.use("/api/membresias", auth, requireRole(1), membresiaRoutes);
 
 // Ejemplo de ruta opcionalAuth (si quieres mostrar datos distintos según logueo)
 app.get("/api/ping", optionalAuth, (req, res) => {
-    res.json({
-        ok: true,
-        user: req.user || null,
-    });
+  res.json({
+    ok: true,
+    user: req.user || null,
+  });
 });
 
 const PORT = process.env.PORT || 3000;
