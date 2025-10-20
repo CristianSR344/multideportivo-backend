@@ -3,66 +3,79 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
+// Rutas
 import userRoutes from "./routes/usuarios.js";
 import rolesRoutes from "./routes/roles.js";
 import membresiaRoutes from "./routes/membresia.js";
 import authRoutes from "./routes/auth.js";
 
+// Middlewares de autenticación (ajusta si los usas)
 import { auth, requireRole, optionalAuth } from "./middleware/auth.js";
 
 const app = express();
 
+/* =======================================================
+   🔒 CONFIGURACIÓN DE CORS (para localhost y Azure)
+   ======================================================= */
 const allowedOrigins = [
-  "http://localhost:3000",
-  "https://black-smoke-059d69b1e.2.azurestaticapps.net", // tu SWA
+  "http://localhost:3000", // desarrollo local
+  "https://black-smoke-059d69b1e.2.azurestaticapps.net", // tu front en Azure SWA
 ];
 
-app.use(express.json());
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir llamadas sin Origin (curl/Postman) y las de la lista blanca
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS: " + origin));
+  },
+  credentials: true, // ⬅️ necesario si usas cookies JWT httpOnly
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// Aplicar CORS global
+app.use(cors(corsOptions));
+// Responder correctamente a preflights OPTIONS
+app.options("*", cors(corsOptions));
+
+/* =======================================================
+   🧩 MIDDLEWARES BÁSICOS
+   ======================================================= */
+app.use(express.json({ limit: "10mb" })); // soporte para imágenes base64
 app.use(cookieParser());
 
-app.use((req, res, next) => {
-  // Para ver qué Origin llega realmente
-  // console.log("Origin:", req.headers.origin);
-  next();
-});
+/* =======================================================
+   🚏 RUTAS
+   ======================================================= */
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Permite request sin Origin (e.g. curl, Postman) y los orígenes de la lista
-      if (!origin || allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS: " + origin));
-    },
-    credentials: true, // ⬅️ si usas cookies/JWT en cookie
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
-app.options("*", cors());
-
-// Rutas públicas (por ejemplo, login / register si lo quieres público)
+// 🔓 Rutas públicas (registro / login)
 app.use("/api/auth", authRoutes);
 
-// Rutas que requieren estar autenticado (cualquier usuario)
+// 🔐 Rutas protegidas (requieren estar autenticado)
 app.use("/api/usuarios", auth, userRoutes);
 
-// Catálogos restringidos a ADMIN (ejemplo: rol 1 = Admin)
+// 🛡️ Rutas restringidas según rol (por ejemplo, 1 = Admin)
 app.use("/api/roles", auth, requireRole(1), rolesRoutes);
-
-// Membresías solo para Admin (ajusta según tu lógica)
 app.use("/api/membresias", auth, requireRole(1), membresiaRoutes);
 
-// Ejemplo de ruta opcionalAuth (si quieres mostrar datos distintos según logueo)
+// Ejemplo de ruta semi-pública (puede responder diferente si hay token)
 app.get("/api/ping", optionalAuth, (req, res) => {
   res.json({
     ok: true,
+    message: "Servidor activo ✅",
     user: req.user || null,
   });
 });
 
+/* =======================================================
+   🚀 SERVIDOR
+   ======================================================= */
 const PORT = process.env.PORT || 3000;
-app.get("/", (_req, res) => res.send("Backend server is running!"));
-app.listen(PORT, () => console.log(`Backend server is running on :${PORT}`));
+
+app.get("/", (_req, res) => res.send("✅ Backend server is running!"));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Backend running on http://localhost:${PORT}`);
+});
