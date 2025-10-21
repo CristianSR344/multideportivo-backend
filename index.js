@@ -12,6 +12,8 @@ import authRoutes from "./routes/auth.js";
 import eventosRoutes from "./routes/eventos.js";
 import imagenesEventosRoutes from "./routes/imagenes_evento.js";
 import actividadRoutes from "./routes/actividad.js";
+import tipoPagoRoutes from "./routes/tipo_pago.js";
+
 
 // Middlewares de autenticación
 import { auth, requireRole, optionalAuth } from "./middleware/auth.js";
@@ -57,6 +59,8 @@ app.use("/api/pagos", pagosRoutes);
 app.use("/api/eventos", eventosRoutes);
 app.use("/api/imagenes_eventos", imagenesEventosRoutes);
 app.use("/api/actividad", actividadRoutes);/* auth, requireRole([1,3]) */
+app.use("/api/tipoPago", tipoPagoRoutes);
+app.use("/api/pagos", pagosRoutes);
 
 // 🛡️ Rutas restringidas según rol
 app.use("/api/usuarios", auth, requireRole([1, 2, 3]), userRoutes);
