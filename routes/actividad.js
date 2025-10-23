@@ -1,20 +1,18 @@
-// routes/actividad.js
-import express from "express";
+import { Router } from "express";
 import {
   createActividad,
-  getActividades,
+  listActividades,
   getActividadById,
   updateActividad,
   deleteActividad,
 } from "../controllers/actividad.js";
 
-const router = express.Router();
+const router = Router();
 
-router.post("/", createActividad);           // Crear
-router.get("/", getActividades);             // Listar (opcional ?usuario=ID)
-router.get("/:id", getActividadById);        // Detalle
-router.put("/:id", updateActividad);         // Update total/parcial
-router.patch("/:id", updateActividad);       // (alias)
-router.delete("/:id", deleteActividad);      // Borrar
+router.post("/", createActividad);            // Crear
+router.get("/", listActividades);             // Listar
+router.get("/:idActividad", getActividadById);// Obtener uno
+router.put("/:idActividad", updateActividad); // Actualizar
+router.delete("/:idActividad", deleteActividad); // Eliminar
 
 export default router;

@@ -13,6 +13,15 @@ import eventosRoutes from "./routes/eventos.js";
 import imagenesEventosRoutes from "./routes/imagenes_evento.js";
 import actividadRoutes from "./routes/actividad.js";
 import tipoPagoRoutes from "./routes/tipo_pago.js";
+import imagenesEspaciosRoutes from "./routes/imagenes_espacios.js";
+import espaciosRoutes from "./routes/espacio.js";
+import espacioActividadRoutes from "./routes/espacio_actividad.js";
+import imagenActividadRoutes from "./routes/imagenes_actividad.js";
+import cursoRoutes from "./routes/curso.js";
+import asistenciaRoutes from "./routes/asistencia.js";
+import cursoAsistenciaRoutes from "./routes/curso_has_asistencia.js";
+import accidenteRoutes from "./routes/accidente.js";
+import usuariosRoutes from "./routes/usuarios.js";
 
 
 // Middlewares de autenticación
@@ -61,6 +70,20 @@ app.use("/api/imagenes_eventos", imagenesEventosRoutes);
 app.use("/api/actividad", actividadRoutes);/* auth, requireRole([1,3]) */
 app.use("/api/tipoPago", tipoPagoRoutes);
 app.use("/api/pagos", pagosRoutes);
+app.use("/api/imagenes-espacios", imagenesEspaciosRoutes);
+app.use("/api/espacio", espaciosRoutes);
+app.use("/api/espacio-actividad", /* opcional: auth */ espacioActividadRoutes);
+app.use("/api/imagen-actividad", /* auth opcional */ imagenActividadRoutes);
+app.use("/api/cursos", cursoRoutes);
+app.use("/api/asistencias", asistenciaRoutes);
+app.use("/api/curso_asistencia", cursoAsistenciaRoutes);
+app.use("/api/accidentes", accidenteRoutes);
+app.use("/api/usuarios", usuariosRoutes);
+
+
+
+
+
 
 // 🛡️ Rutas restringidas según rol
 app.use("/api/usuarios", auth, requireRole([1, 2, 3]), userRoutes);

@@ -1,93 +1,94 @@
-// controllers/actividad.js
 import poolPromise from "../connect.js";
 import sql from "mssql";
 
-/* =======================================================
+/* ======================================================
    Crear actividad
-   Body: { id_usuario, nom_act, lugar, descripcion, cupo }
-   ======================================================= */
+====================================================== */
 export const createActividad = async (req, res) => {
-  const { id_usuario, nom_act, lugar, descripcion, cupo } = req.body;
+  const { idUsuario, nombre, descripcion, cupo } = req.body;
 
-  if (!id_usuario) {
-    return res.status(400).json({ message: "id_usuario es requerido" });
+  // Validación básica
+  if (!idUsuario || !nombre) {
+    return res.status(400).json({
+      message: "idUsuario y nombre son obligatorios.",
+    });
   }
 
   try {
     const pool = await poolPromise;
 
     const result = await pool.request()
-      .input("id_usuario", sql.Int, id_usuario)
-      .input("nom_act", sql.VarChar(200), nom_act ?? null)
-      .input("lugar", sql.VarChar(200), lugar ?? null)
-      .input("descripcion", sql.Text, descripcion ?? null) // SQL Server 'text'
+      .input("idUsuario", sql.Int, idUsuario)
+      .input("nombre", sql.VarChar(100), nombre)
+      .input("descripcion", sql.VarChar(sql.MAX), descripcion ?? null)
       .input("cupo", sql.Int, cupo ?? null)
       .query(`
-        INSERT INTO dbo.actividad (id_usuario, nom_act, lugar, descripcion, cupo)
-        OUTPUT INSERTED.idactividad, INSERTED.id_usuario, INSERTED.nom_act, INSERTED.lugar, INSERTED.cupo
-        VALUES (@id_usuario, @nom_act, @lugar, @descripcion, @cupo);
+        INSERT INTO dbo.actividad (idUsuario, nombre, descripcion, cupo)
+        OUTPUT INSERTED.idActividad, INSERTED.idUsuario, INSERTED.nombre, INSERTED.descripcion, INSERTED.cupo
+        VALUES (@idUsuario, @nombre, @descripcion, @cupo);
       `);
 
-    res.status(201).json({ message: "Actividad creada", data: result.recordset[0] });
+    return res.status(201).json({
+      message: "Actividad creada correctamente.",
+      data: result.recordset[0],
+    });
   } catch (err) {
     console.error("❌ createActividad:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-/* =======================================================
-   Listar actividades (opcional filtro por id_usuario)
-   GET /api/actividad?usuario=123
-   ======================================================= */
-export const getActividades = async (req, res) => {
-  const idUsuario = req.query.usuario ? parseInt(req.query.usuario, 10) : null;
-
+/* ======================================================
+   Listar actividades
+====================================================== */
+export const listActividades = async (_req, res) => {
   try {
     const pool = await poolPromise;
-    let result;
-
-    if (idUsuario) {
-      result = await pool.request()
-        .input("id_usuario", sql.Int, idUsuario)
-        .query(`
-          SELECT idactividad, id_usuario, nom_act, lugar, descripcion, cupo
-          FROM dbo.actividad
-          WHERE id_usuario = @id_usuario
-          ORDER BY idactividad DESC;
-        `);
-    } else {
-      result = await pool.request().query(`
-          SELECT idactividad, id_usuario, nom_act, lugar, descripcion, cupo
-          FROM dbo.actividad
-          ORDER BY idactividad DESC;
-      `);
-    }
+    const result = await pool.request().query(`
+      SELECT 
+        a.idActividad,
+        a.idUsuario,
+        u.nombre AS nombreUsuario,
+        a.nombre,
+        a.descripcion,
+        a.cupo
+      FROM dbo.actividad a
+      LEFT JOIN dbo.usuarios u ON u.id_usuario = a.idUsuario
+      ORDER BY a.idActividad DESC;
+    `);
 
     res.json(result.recordset);
   } catch (err) {
-    console.error("❌ getActividades:", err);
+    console.error("❌ listActividades:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-/* =======================================================
-   Obtener una actividad por id
-   ======================================================= */
+/* ======================================================
+   Obtener actividad por ID
+====================================================== */
 export const getActividadById = async (req, res) => {
-  const { id } = req.params;
+  const { idActividad } = req.params;
 
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input("id", sql.Int, id)
+      .input("idActividad", sql.Int, idActividad)
       .query(`
-        SELECT idactividad, id_usuario, nom_act, lugar, descripcion, cupo
-        FROM dbo.actividad
-        WHERE idactividad = @id;
+        SELECT 
+          a.idActividad,
+          a.idUsuario,
+          u.nombre AS nombreUsuario,
+          a.nombre,
+          a.descripcion,
+          a.cupo
+        FROM dbo.actividad a
+        LEFT JOIN dbo.usuarios u ON u.id_usuario = a.idUsuario
+        WHERE a.idActividad = @idActividad;
       `);
 
     if (!result.recordset.length) {
-      return res.status(404).json({ message: "Actividad no encontrada" });
+      return res.status(404).json({ message: "Actividad no encontrada." });
     }
 
     res.json(result.recordset[0]);
@@ -97,67 +98,74 @@ export const getActividadById = async (req, res) => {
   }
 };
 
-/* =======================================================
-   Actualizar (PUT completo o PATCH parcial)
-   ======================================================= */
+/* ======================================================
+   Actualizar actividad
+====================================================== */
 export const updateActividad = async (req, res) => {
-  const { id } = req.params;
-  const { id_usuario, nom_act, lugar, descripcion, cupo } = req.body;
+  const { idActividad } = req.params;
+  const { idUsuario, nombre, descripcion, cupo } = req.body;
 
   try {
     const pool = await poolPromise;
 
-    // Usamos ISNULL para mantener valores existentes cuando vengan como null/undefined
     const result = await pool.request()
-      .input("id", sql.Int, id)
-      .input("id_usuario", sql.Int, id_usuario ?? null)
-      .input("nom_act", sql.VarChar(200), nom_act ?? null)
-      .input("lugar", sql.VarChar(200), lugar ?? null)
-      .input("descripcion", sql.Text, descripcion ?? null)
+      .input("idActividad", sql.Int, idActividad)
+      .input("idUsuario", sql.Int, idUsuario ?? null)
+      .input("nombre", sql.VarChar(100), nombre ?? null)
+      .input("descripcion", sql.VarChar(sql.MAX), descripcion ?? null)
       .input("cupo", sql.Int, cupo ?? null)
       .query(`
         UPDATE dbo.actividad
         SET
-          id_usuario = COALESCE(@id_usuario, id_usuario),
-          nom_act    = COALESCE(@nom_act, nom_act),
-          lugar      = COALESCE(@lugar, lugar),
-          descripcion= COALESCE(@descripcion, descripcion),
-          cupo       = COALESCE(@cupo, cupo)
-        WHERE idactividad = @id;
+          idUsuario   = COALESCE(@idUsuario, idUsuario),
+          nombre      = COALESCE(@nombre, nombre),
+          descripcion = COALESCE(@descripcion, descripcion),
+          cupo        = COALESCE(@cupo, cupo)
+        WHERE idActividad = @idActividad;
 
-        SELECT idactividad, id_usuario, nom_act, lugar, descripcion, cupo
-        FROM dbo.actividad
-        WHERE idactividad = @id;
+        SELECT 
+          a.idActividad,
+          a.idUsuario,
+          u.nombre AS nombreUsuario,
+          a.nombre,
+          a.descripcion,
+          a.cupo
+        FROM dbo.actividad a
+        LEFT JOIN dbo.usuarios u ON u.id_usuario = a.idUsuario
+        WHERE a.idActividad = @idActividad;
       `);
 
     if (!result.recordset.length) {
-      return res.status(404).json({ message: "Actividad no encontrada" });
+      return res.status(404).json({ message: "Actividad no encontrada." });
     }
 
-    res.json({ message: "Actividad actualizada", data: result.recordset[0] });
+    res.json({
+      message: "Actividad actualizada correctamente.",
+      data: result.recordset[0],
+    });
   } catch (err) {
     console.error("❌ updateActividad:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-/* =======================================================
-   Eliminar
-   ======================================================= */
+/* ======================================================
+   Eliminar actividad
+====================================================== */
 export const deleteActividad = async (req, res) => {
-  const { id } = req.params;
+  const { idActividad } = req.params;
 
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input("id", sql.Int, id)
-      .query(`DELETE FROM dbo.actividad WHERE idactividad = @id;`);
+      .input("idActividad", sql.Int, idActividad)
+      .query(`DELETE FROM dbo.actividad WHERE idActividad = @idActividad;`);
 
     if (result.rowsAffected[0] === 0) {
-      return res.status(404).json({ message: "Actividad no encontrada" });
+      return res.status(404).json({ message: "Actividad no encontrada." });
     }
 
-    res.json({ message: "Actividad eliminada" });
+    res.json({ message: "Actividad eliminada correctamente." });
   } catch (err) {
     console.error("❌ deleteActividad:", err);
     res.status(500).json({ error: err.message });

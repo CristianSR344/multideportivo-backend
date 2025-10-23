@@ -1,9 +1,18 @@
-import express from 'express';
-import { getUsuario } from '../controllers/usuarios.js';
+// routes/usuarios.js
+import { Router } from "express";
+import {
+  listUsuarios,
+  getUsuario,
+  updateUsuario,
+  deleteUsuario
+} from "../controllers/usuarios.js";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/find/:usuario", getUsuario);
- 
+
+router.get("/", listUsuarios);
+router.get("/:id_usuario", getUsuario);
+router.put("/:id_usuario", updateUsuario);
+router.delete("/:id_usuario", deleteUsuario);
 
 export default router;
