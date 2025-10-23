@@ -34,7 +34,7 @@ const app = express();
    ======================================================= */
 const allowedOrigins = [
   "http://localhost:3000", // desarrollo local
-  // "https://black-smoke-059d69b1e.2.azurestaticapps.net", // ⚙️ Descomenta cuando pruebes en Azure
+  "https://black-smoke-059d69b1e.2.azurestaticapps.net", // ⚙️ Descomenta cuando pruebes en Azure
 ];
 
 app.use(
