@@ -79,6 +79,7 @@ app.use("/api/asistencias", asistenciaRoutes);
 app.use("/api/curso_asistencia", cursoAsistenciaRoutes);
 app.use("/api/accidentes", accidenteRoutes);
 app.use("/api/usuarios", usuariosRoutes);
+app.use("/api/roles", rolesRoutes);
 
 
 
@@ -86,9 +87,8 @@ app.use("/api/usuarios", usuariosRoutes);
 
 
 // 🛡️ Rutas restringidas según rol
-app.use("/api/usuarios", auth, requireRole([1, 2, 3]), userRoutes);
-app.use("/api/roles", auth, requireRole(1), rolesRoutes);
-app.use("/api/membresias", auth, requireRole([1, 3]), membresiaRoutes);
+app.use("/api/usuarios",  userRoutes);//auth, requireRole([1, 2, 3]),
+app.use("/api/membresias", membresiaRoutes); //, auth, requireRole([1, 3])
 
 // Ruta de prueba
 app.get("/api/ping", optionalAuth, (req, res) => {
